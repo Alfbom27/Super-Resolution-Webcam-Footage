@@ -8,12 +8,14 @@ data:
     batch_size: 16
 
 training:
+  model_size: "large"
+  scale: 4
   epochs: 50
   device: "cuda:0"
-
+  combined_loss: False
   optimizer:
     lr: 0.0001
 
 
 model:
-  model_checkpoint: "./src/edsr64_x4.pt"
+  model_checkpoint: "./src/edsr_x4.pt"
