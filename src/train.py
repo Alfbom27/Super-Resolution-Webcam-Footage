@@ -1,4 +1,5 @@
 import torch
+from torch.autograd import backward
 from torch.utils.data import DataLoader
 import argparse
 import yaml
@@ -6,6 +7,7 @@ from model.EDSR import edsr_r16f64, edsr_r32f256
 from utils.dataset import WebcamSRDataset
 from utils.loss import L1Loss, PerceptualLoss, CombinedLoss
 import numpy as np
+from torchmetrics.image import PeakSignalNoiseRatio, StructuralSimilarityIndexMeasure
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
@@ -81,11 +83,24 @@ total_val_loss = []
 best_val_loss = np.inf
 epochs_without_improvement = 0
 
+psnr = PeakSignalNoiseRatio(data_range=1.0).to(DEVICE)
+ssim = StructuralSimilarityIndexMeasure(data_range=1.0).to(DEVICE)
+
+total_psnr = []
+total_ssim = []
+total_val_psnr = []
+total_val_ssim = []
+
 for epoch in range(EPOCHS):
     model.train()
 
     train_loss = 0
     val_loss = 0
+
+    train_psnr = 0
+    train_ssim = 0
+    val_psnr = 0
+    val_ssim = 0
 
     for lr_data, hr_data in train_loader:
         lr_data, hr_data = lr_data.to(DEVICE), hr_data.to(DEVICE)
@@ -99,9 +114,17 @@ for epoch in range(EPOCHS):
         optimizer.step()
 
         train_loss += loss.item()
+        train_psnr += psnr(output, hr_data).item()
+        train_ssim += ssim(output, hr_data).item()
 
     train_loss /= len(train_loader)
     total_loss.append(train_loss)
+
+    train_psnr /= len(train_loader)
+    train_ssim /= len(train_loader)
+
+    total_psnr.append(train_psnr)
+    total_ssim.append(train_ssim)
 
     model.eval()
     with torch.no_grad():
@@ -111,19 +134,31 @@ for epoch in range(EPOCHS):
             output = model(lr_data)
 
             loss = loss_fn(output, hr_data)
+
             val_loss += loss.item()
+            val_psnr += psnr(output, hr_data).item()
+            val_ssim += ssim(output, hr_data).item()
 
 
     val_loss /= len(val_loader)
     total_val_loss.append(val_loss)
 
+    val_psnr /= len(val_loader)
+    val_ssim /= len(val_loader)
+
+    total_psnr.append(val_psnr)
+    total_ssim.append(val_ssim)
+
     lr_scheduler.step()
 
-    # Perhaps add logging psnr
     print(
         f"Epoch {epoch + 1} | "
         f"Train Loss: {train_loss:.4f} | "
         f"Val Loss: {val_loss:.4f} | "
+        f"Train PSNR: {train_psnr:.4f} | "
+        f"Val PSNR: {val_psnr:.4f} | "
+        f"Train SSIM: {train_ssim:.4f} | "
+        f"Val SSIM: {val_ssim:.4f} | "
         f"Current LR: {optimizer.param_groups[0]['lr']}"
     )
 
