@@ -4,7 +4,7 @@ import argparse
 import yaml
 from model.EDSR import edsr_r16f64, edsr_r32f256
 from utils.dataset import WebcamSRDataset
-from utils.loss import L1Loss
+from utils.loss import L1Loss, PerceptualLoss, CombinedLoss
 import numpy as np
 
 parser = argparse.ArgumentParser()
@@ -26,9 +26,12 @@ TRAIN_BATCH_SIZE = config['data']['train']['batch_size']
 VALIDATION_IMAGES_DIR = config['data']['valid']['images_dir']
 VALIDATION_BATCH_SIZE = config['data']['valid']['batch_size']
 
+MODEL_SIZE = config["training"]["model_size"]
+SCALE = config["training"]["scale"]
 LEARNING_RATE = config['training']['optimizer']['lr']
 EPOCHS = config['training']['epochs']
 DEVICE = config['training']['device']
+COMBINED_LOSS = config['training']['combined_loss']
 
 MODEL_CHECKPOINT = config['model']['model_checkpoint']
 
@@ -38,15 +41,20 @@ else:
     DEVICE = "cpu"
 
 # Dataset
-train_data = WebcamSRDataset(root_dir=TRAIN_IMAGES_DIR)
-val_data = WebcamSRDataset(root_dir=VALIDATION_IMAGES_DIR)
+# Add transforms
+train_data = WebcamSRDataset(root_dir=TRAIN_IMAGES_DIR, scale_factor=SCALE)
+val_data = WebcamSRDataset(root_dir=VALIDATION_IMAGES_DIR, scale_factor=SCALE)
 
 # Dataloader
 train_loader = DataLoader(train_data, batch_size=TRAIN_BATCH_SIZE, shuffle=True)
 val_loader = DataLoader(val_data, batch_size=VALIDATION_BATCH_SIZE, shuffle=False)
 
 # Load model
-model = edsr_r16f64(scale=4)
+if MODEL_SIZE == "large":
+    model = edsr_r32f256(scale=SCALE)
+else:
+    model = edsr_r16f64(scale=SCALE)
+
 model.load_pretrained(MODEL_CHECKPOINT)
 model = model.to(DEVICE)
 
@@ -56,7 +64,12 @@ lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=100000, gamm
 
 # loss
 
-loss_fn = L1Loss()
+if COMBINED_LOSS:
+    l1_loss = L1Loss()
+    perceptual_loss = PerceptualLoss(shift=1)
+    loss_fn = CombinedLoss(pixel_loss=l1_loss, perceptual_loss=perceptual_loss, pixel_weight=1.0, perceptual_weight=0.1)
+else:
+    loss_fn = L1Loss()
 
 # training loop
 
