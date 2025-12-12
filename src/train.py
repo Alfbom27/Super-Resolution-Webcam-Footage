@@ -96,16 +96,15 @@ total_val_ssim = []
 for epoch in range(EPOCHS):
     model.train()
 
+    psnr.reset()
+    ssim.reset()
+
     train_loss = 0
     val_loss = 0
 
-    train_psnr = 0
-    train_ssim = 0
-    val_psnr = 0
-    val_ssim = 0
-
     for lr_data, hr_data in train_loader:
         lr_data, hr_data = lr_data.to(DEVICE), hr_data.to(DEVICE)
+
 
         optimizer.zero_grad()
 
@@ -116,19 +115,22 @@ for epoch in range(EPOCHS):
         optimizer.step()
 
         train_loss += loss.item()
-        train_psnr += psnr(output, hr_data).item()
-        train_ssim += ssim(output, hr_data).item()
+        psnr.update(output, hr_data)
+        ssim.update(output, hr_data)
 
     train_loss /= len(train_loader)
     total_loss.append(train_loss)
 
-    train_psnr /= len(train_loader)
-    train_ssim /= len(train_loader)
+    train_psnr = psnr.compute().item()
+    train_ssim = ssim.compute().item()
 
     total_psnr.append(train_psnr)
     total_ssim.append(train_ssim)
 
     model.eval()
+
+    psnr.reset()
+    ssim.reset()
     with torch.no_grad():
         for lr_data, hr_data in val_loader:
             lr_data, hr_data = lr_data.to(DEVICE), hr_data.to(DEVICE)
@@ -138,18 +140,19 @@ for epoch in range(EPOCHS):
             loss = loss_fn(output, hr_data)
 
             val_loss += loss.item()
-            val_psnr += psnr(output, hr_data).item()
-            val_ssim += ssim(output, hr_data).item()
+            psnr.update(output, hr_data)
+            ssim.update(output, hr_data)
+
 
 
     val_loss /= len(val_loader)
     total_val_loss.append(val_loss)
 
-    val_psnr /= len(val_loader)
-    val_ssim /= len(val_loader)
+    val_psnr = psnr.compute().item()
+    val_ssim = ssim.compute().item()
 
-    total_psnr.append(val_psnr)
-    total_ssim.append(val_ssim)
+    total_val_psnr.append(val_psnr)
+    total_val_ssim.append(val_ssim)
 
     lr_scheduler.step()
 
