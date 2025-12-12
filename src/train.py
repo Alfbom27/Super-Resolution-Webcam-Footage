@@ -1,5 +1,4 @@
 import torch
-from torch.autograd import backward
 from torch.utils.data import DataLoader
 import argparse
 import yaml
@@ -36,6 +35,7 @@ DEVICE = config['training']['device']
 COMBINED_LOSS = config['training']['combined_loss']
 
 MODEL_CHECKPOINT = config['model']['model_checkpoint']
+TRAIN_FROM_CHECKPOINT = config['model']['pre_trained']
 
 if DEVICE == "cuda:0":
     DEVICE = "cuda:0" if torch.cuda.is_available() else "cpu"
@@ -57,7 +57,9 @@ if MODEL_SIZE == "large":
 else:
     model = edsr_r16f64(scale=SCALE)
 
-model.load_pretrained(MODEL_CHECKPOINT)
+if TRAIN_FROM_CHECKPOINT:
+    model.load_pretrained(MODEL_CHECKPOINT)
+
 model = model.to(DEVICE)
 
 # Optimizer and lr scheduler

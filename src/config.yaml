@@ -1,6 +1,6 @@
 data:
   train:
-    images_dir: "./ffhq_8k_split/train"
+    images_dir: "./ffhq_8k_split/val"
     batch_size: 16
 
   valid:
@@ -18,4 +18,5 @@ training:
 
 
 model:
+  pre_trained: False
   model_checkpoint: "./src/edsr_x4.pt"
