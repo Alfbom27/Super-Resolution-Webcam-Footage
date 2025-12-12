@@ -1,10 +1,14 @@
 data:
   train:
-    images_dir: "./ffhq_8k_split/val"
+    images_dir: "./ffhq_8k_split/train"
     batch_size: 16
 
   valid:
     images_dir: "./ffhq_8k_split/val"
+    batch_size: 16
+
+  test:
+    images_dir: "./ffhq_8k_split/test"
     batch_size: 16
 
 training:
