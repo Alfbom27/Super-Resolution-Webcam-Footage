@@ -1,5 +1,6 @@
-import cv2
 import numpy as np
+from PIL import Image
+import io
 
 
 class WebcamDegradation:
@@ -12,13 +13,15 @@ class WebcamDegradation:
         self.gamma = gamma
         self.gains = np.array(gains if gains is not None else [1.0, 1.0, 1.0])
 
-    def downscale(self, img):
+    def downscale(self, img_array):
         if self.downscale_factor > 1:
-            h, w = img.shape[:2]
+            h, w = img_array.shape[:2]
             new_w = max(32, w // self.downscale_factor)
             new_h = max(32, h // self.downscale_factor)
-            return cv2.resize(img, (new_w, new_h), interpolation=cv2.INTER_AREA)
-        return img
+            img_pil = Image.fromarray((img_array * 255).astype(np.uint8))
+            img_pil = img_pil.resize((new_w, new_h), Image.BICUBIC)
+            return np.array(img_pil).astype(np.float32) / 255.0
+        return img_array
 
     def apply_white_balance(self, img):
         balanced = img * self.gains.reshape(1, 1, 3)
@@ -35,17 +38,24 @@ class WebcamDegradation:
 
     def apply_jpeg_compression(self, img):
         img_uint8 = (np.clip(img, 0.0, 1.0) * 255.0).astype(np.uint8)
-        _, enc = cv2.imencode('.jpg', img_uint8, [cv2.IMWRITE_JPEG_QUALITY, self.jpeg_quality])
-        return cv2.imdecode(enc, cv2.IMREAD_COLOR)
+        img_pil = Image.fromarray(img_uint8)
+        buffer = io.BytesIO()
+        img_pil.save(buffer, format='JPEG', quality=self.jpeg_quality)
+        buffer.seek(0)
+        img_compressed = Image.open(buffer)
+        return np.array(img_compressed).astype(np.float32) / 255.0
 
-    def __call__(self, img):
-        """Apply full degradation pipeline to image (uint8 BGR)."""
-        img = img.astype(np.float32) / 255.0
+    def __call__(self, img_pil):
+        """Apply full degradation pipeline to PIL Image."""
+        # Convert PIL to numpy array (RGB)
+        img = np.array(img_pil).astype(np.float32) / 255.0
 
         img = self.downscale(img)
         img = self.apply_white_balance(img)
         img = self.add_noise(img)
         img = self.apply_gamma(img)
-        img = self.apply_jpeg_compression(img)
+        #img = self.apply_jpeg_compression(img)
 
-        return img
+        # Convert back to uint8 for PIL
+        img_uint8 = (np.clip(img, 0.0, 1.0) * 255.0).astype(np.uint8)
+        return Image.fromarray(img_uint8)
