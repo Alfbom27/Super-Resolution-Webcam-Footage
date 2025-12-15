@@ -4,7 +4,7 @@ import argparse
 import yaml
 from model.EDSR import edsr_r16f64, edsr_r32f256
 from utils.dataset import WebcamSRDataset
-from torchmetrics.image import PeakSignalNoiseRatio, StructuralSimilarityIndexMeasure
+from torchmetrics.image import PeakSignalNoiseRatio, StructuralSimilarityIndexMeasure, LearnedPerceptualImagePatchSimilarity
 
 
 parser = argparse.ArgumentParser()
@@ -35,7 +35,7 @@ if DEVICE == "cuda:0":
 else:
     DEVICE = "cpu"
 
-test_data = WebcamSRDataset(root_dir=TEST_IMAGES_DIR, scale_factor=SCALE)
+test_data = WebcamSRDataset(root_dir=TEST_IMAGES_DIR, scale_factor=SCALE, patch_size=None)
 test_loader = DataLoader(test_data, batch_size=TEST_BATCH_SIZE, shuffle=False)
 
 
@@ -51,8 +51,9 @@ model = model.to(DEVICE)
 
 model.eval()
 
-total_psnr = 0
-total_ssim = 0
+psnr = PeakSignalNoiseRatio(data_range=1.0).to(DEVICE)
+ssim = StructuralSimilarityIndexMeasure(data_range=1.0).to(DEVICE)
+lpips = LearnedPerceptualImagePatchSimilarity(net_type='vgg', normalize=True).to(DEVICE)
 
 with torch.no_grad():
     for lr_data, hr_data in test_loader:
@@ -60,3 +61,16 @@ with torch.no_grad():
 
         output = model(lr_data)
 
+        psnr.update(output, hr_data)
+        ssim.update(output, hr_data)
+        lpips.update(output, hr_data)
+
+    test_psnr = psnr.compute().item()
+    test_ssim = ssim.compute().item()
+    test_lpips = lpips.compute().item()
+
+    print(
+        f"Test PSNR: {test_psnr:.4f} | "
+        f"Test SSIM: {test_ssim:.4f} | "
+        f"Test LPIPS: {test_lpips:.4f} | "
+    )
