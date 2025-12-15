@@ -70,7 +70,7 @@ lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=100000, gamm
 
 if COMBINED_LOSS:
     l1_loss = L1Loss()
-    perceptual_loss = PerceptualLoss(shift=1)
+    perceptual_loss = PerceptualLoss()
     loss_fn = CombinedLoss(pixel_loss=l1_loss, perceptual_loss=perceptual_loss, pixel_weight=1.0, perceptual_weight=0.1)
 else:
     loss_fn = L1Loss()
