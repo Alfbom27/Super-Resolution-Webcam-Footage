@@ -9,7 +9,8 @@ class WebcamSRDataset(Dataset):
     def __init__(self, root_dir, patch_size=48, scale_factor=4, noise_sigma=1.0, jpeg_quality=75, gamma=1.1):
         self.patch_size = patch_size
         self.scale_factor = scale_factor
-        self.random_crop = T.RandomCrop(patch_size*scale_factor)
+        if patch_size is not None:
+            self.random_crop = T.RandomCrop(patch_size*scale_factor)
 
         self.degradation = WebcamDegradation(
             downscale_factor=scale_factor,
@@ -25,6 +26,7 @@ class WebcamSRDataset(Dataset):
 
     def __len__(self):
         return len(self.image_paths)
+
     def __getitem__(self, idx):
         hr_img = Image.open(self.image_paths[idx]).convert('RGB')
 

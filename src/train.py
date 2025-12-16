@@ -2,7 +2,7 @@ import torch
 from torch.utils.data import DataLoader
 import argparse
 import yaml
-from model.EDSR import edsr_r16f64, edsr_r32f256
+from model.EDSR import edsr_r16f64, edsr_r32f256, edsr_r16f64_irb, edsr_r32f256_irb
 from utils.dataset import WebcamSRDataset
 from utils.loss import L1Loss, PerceptualLoss, CombinedLoss
 import numpy as np
@@ -37,6 +37,11 @@ COMBINED_LOSS = config['training']['combined_loss']
 MODEL_CHECKPOINT = config['model']['model_checkpoint']
 TRAIN_FROM_CHECKPOINT = config['model']['pre_trained']
 TRAIN_FROM_X2 = config['model']['train_from_x2']
+USE_INVERSE_RESIDUAL = config['model'].get('use_inverse_residual', False)
+EXPANSION_FACTOR = config['model'].get('expansion_factor', 6)
+IRB_REPEATS = config['model'].get('irb_repeats', 1)
+IRB_VERSION = config['model'].get('irb_version', 'v2')
+SQUEEZE_EXCITATION = config['model'].get('squeeze_excitation', True)
 
 if DEVICE == "cuda:0":
     DEVICE = "cuda:0" if torch.cuda.is_available() else "cpu"
@@ -53,10 +58,20 @@ train_loader = DataLoader(train_data, batch_size=TRAIN_BATCH_SIZE, shuffle=True)
 val_loader = DataLoader(val_data, batch_size=VALIDATION_BATCH_SIZE, shuffle=False)
 
 # Load model
-if MODEL_SIZE == "large":
-    model = edsr_r32f256(scale=SCALE)
+if USE_INVERSE_RESIDUAL:
+    if MODEL_SIZE == "large":
+        model = edsr_r32f256_irb(scale=SCALE, expansion_factor=EXPANSION_FACTOR,
+                                  irb_repeats=IRB_REPEATS, irb_version=IRB_VERSION,
+                                  squeeze_excitation=SQUEEZE_EXCITATION)
+    else:
+        model = edsr_r16f64_irb(scale=SCALE, expansion_factor=EXPANSION_FACTOR,
+                                 irb_repeats=IRB_REPEATS, irb_version=IRB_VERSION,
+                                 squeeze_excitation=SQUEEZE_EXCITATION)
 else:
-    model = edsr_r16f64(scale=SCALE)
+    if MODEL_SIZE == "large":
+        model = edsr_r32f256(scale=SCALE)
+    else:
+        model = edsr_r16f64(scale=SCALE)
 
 if TRAIN_FROM_X2:
     model_x2 = edsr_r32f256(scale=2)
