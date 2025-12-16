@@ -23,4 +23,5 @@ training:
 
 model:
   pre_trained: False
+  train_from_x2: False
   model_checkpoint: "./src/edsr_x4.pt"

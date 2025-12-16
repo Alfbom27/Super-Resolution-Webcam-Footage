@@ -36,6 +36,7 @@ COMBINED_LOSS = config['training']['combined_loss']
 
 MODEL_CHECKPOINT = config['model']['model_checkpoint']
 TRAIN_FROM_CHECKPOINT = config['model']['pre_trained']
+TRAIN_FROM_X2 = config['model']['train_from_x2']
 
 if DEVICE == "cuda:0":
     DEVICE = "cuda:0" if torch.cuda.is_available() else "cpu"
@@ -56,6 +57,19 @@ if MODEL_SIZE == "large":
     model = edsr_r32f256(scale=SCALE)
 else:
     model = edsr_r16f64(scale=SCALE)
+
+if TRAIN_FROM_X2:
+    model_x2 = edsr_r32f256(scale=2)
+    model_x2.load_pretrained("./edsr_x2.pt")
+
+    state_x2 = model_x2.state_dict()
+    state_x4 = model.state_dict()
+
+    for k, v in state_x2.items():
+        if k in state_x4 and state_x4[k].shape == v.shape:
+            state_x4[k] = v
+
+    model.load_state_dict(state_x4)
 
 if TRAIN_FROM_CHECKPOINT:
     model.load_pretrained(MODEL_CHECKPOINT)
