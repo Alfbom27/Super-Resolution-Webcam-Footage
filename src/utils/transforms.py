@@ -9,7 +9,7 @@ class WebcamDegradation:
                  gamma=1.5, gains=None):
         self.downscale_factor = downscale_factor
         self.noise_sigma = noise_sigma
-        self.jpeg_quality = int(np.clip(jpeg_quality, 25, 95))
+        self.jpeg_quality = int(np.clip(jpeg_quality, 5, 95))
         self.gamma = gamma
         self.gains = np.array(gains if gains is not None else [1.0, 1.0, 1.0])
 
@@ -25,8 +25,8 @@ class WebcamDegradation:
 
     def apply_white_balance(self, img):
         balanced = img * self.gains.reshape(1, 1, 3)
-        if balanced.max() > 1.0:
-            balanced /= balanced.max()
+        #if balanced.max() > 1.0:
+        #    balanced /= balanced.max()
         return np.clip(balanced, 0.0, 1.0)
 
     def add_noise(self, img):
@@ -54,7 +54,7 @@ class WebcamDegradation:
         img = self.apply_white_balance(img)
         img = self.add_noise(img)
         img = self.apply_gamma(img)
-        #img = self.apply_jpeg_compression(img)
+        # img = self.apply_jpeg_compression(img)
 
         # Convert back to uint8 for PIL
         img_uint8 = (np.clip(img, 0.0, 1.0) * 255.0).astype(np.uint8)

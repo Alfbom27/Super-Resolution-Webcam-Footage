@@ -6,7 +6,7 @@ from PIL import Image
 from utils.transforms import WebcamDegradation
 
 class WebcamSRDataset(Dataset):
-    def __init__(self, root_dir, patch_size=48, scale_factor=4, noise_sigma=1.0, jpeg_quality=75, gamma=1.1):
+    def __init__(self, root_dir, patch_size=48, scale_factor=4, noise_sigma=1.0, jpeg_quality=75, gamma=1.0):
         self.patch_size = patch_size
         self.scale_factor = scale_factor
         self.random_crop = T.RandomCrop(patch_size*scale_factor)
