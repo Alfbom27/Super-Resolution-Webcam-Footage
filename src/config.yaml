@@ -1,14 +1,14 @@
 data:
   train:
-    images_dir: "./ffhq_8k_split/train"
+    images_dir: "./ffhq_1k_split/train"
     batch_size: 16
 
   valid:
-    images_dir: "./ffhq_8k_split/val"
+    images_dir: "./ffhq_1k_split/val"
     batch_size: 16
 
   test:
-    images_dir: "./ffhq_8k_split/test"
+    images_dir: "./ffhq_1k_split/test"
     batch_size: 16
 
 training:
@@ -16,7 +16,7 @@ training:
   scale: 4
   epochs: 50
   device: "cuda:0"
-  combined_loss: False
+  combined_loss: True
   optimizer:
     lr: 0.0001
 
@@ -25,3 +25,8 @@ model:
   pre_trained: False
   train_from_x2: False
   model_checkpoint: "./src/edsr_x4.pt"
+  use_inverse_residual: True
+  expansion_factor: 6
+  irb_repeats: 1
+  irb_version: "v2"  # "v2" for MobileNetV2, "v3" for MobileNetV3 with SE
+  squeeze_excitation: True  # Only used when irb_version is "v3"
