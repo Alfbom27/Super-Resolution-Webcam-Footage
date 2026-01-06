@@ -21,7 +21,7 @@ class PerceptualLoss(nn.Module):
         vgg_model.requires_grad_ = False
         self.device = "cuda:0" if torch.cuda.is_available() else "cpu"
         vgg_model.to(self.device)
-        self.vgg_layers = nn.ModuleList([vgg_model[:int(l)+1] for l in self.layers])
+        self.vgg_layers = nn.ModuleList([vgg_model[:int(l)] for l in self.layers])
 
         self.normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                               std=[0.229, 0.224, 0.225])
@@ -34,7 +34,7 @@ class PerceptualLoss(nn.Module):
         for layer in self.vgg_layers:
             pred_features = layer(pred)
             target_features = layer(target)
-            loss += nn.functional.l1_loss(pred_features, target_features)
+            loss += nn.functional.mse_loss(pred_features, target_features)
         return loss
 
 
