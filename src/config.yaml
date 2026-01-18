@@ -1,11 +1,11 @@
 data:
   train:
     images_dir: "./ffhq_1k_split/train"
-    batch_size: 16
+    batch_size: 8
 
   valid:
     images_dir: "./ffhq_1k_split/val"
-    batch_size: 16
+    batch_size: 8
 
   test:
     images_dir: "./ffhq_1k_split/test"
@@ -20,13 +20,19 @@ training:
   optimizer:
     lr: 0.0001
 
+degradation:
+  use_degradation: False  # If False, uses bicubic downsampling only
+  noise_sigma: 1.0
+  jpeg_quality: 75
+  gamma: 1.0
+
 
 model:
   pre_trained: False
   train_from_x2: False
   model_checkpoint: "./src/edsr_x4.pt"
   use_inverse_residual: True
-  expansion_factor: 6
+  expansion_factor: 4
   irb_repeats: 1
   irb_version: "v2"  # "v2" for MobileNetV2, "v3" for MobileNetV3 with SE
   squeeze_excitation: True  # Only used when irb_version is "v3"

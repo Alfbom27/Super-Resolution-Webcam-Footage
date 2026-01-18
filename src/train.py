@@ -43,15 +43,34 @@ IRB_REPEATS = config['model'].get('irb_repeats', 1)
 IRB_VERSION = config['model'].get('irb_version', 'v2')
 SQUEEZE_EXCITATION = config['model'].get('squeeze_excitation', True)
 
+# Degradation settings
+USE_DEGRADATION = config.get('degradation', {}).get('use_degradation', True)
+NOISE_SIGMA = config.get('degradation', {}).get('noise_sigma', 1.0)
+JPEG_QUALITY = config.get('degradation', {}).get('jpeg_quality', 75)
+GAMMA = config.get('degradation', {}).get('gamma', 1.0)
+
 if DEVICE == "cuda:0":
     DEVICE = "cuda:0" if torch.cuda.is_available() else "cpu"
 else:
     DEVICE = "cpu"
 
 # Dataset
-# Add transforms
-train_data = WebcamSRDataset(root_dir=TRAIN_IMAGES_DIR, scale_factor=SCALE)
-val_data = WebcamSRDataset(root_dir=VALIDATION_IMAGES_DIR, scale_factor=SCALE)
+train_data = WebcamSRDataset(
+    root_dir=TRAIN_IMAGES_DIR,
+    scale_factor=SCALE,
+    use_degradation=USE_DEGRADATION,
+    noise_sigma=NOISE_SIGMA,
+    jpeg_quality=JPEG_QUALITY,
+    gamma=GAMMA
+)
+val_data = WebcamSRDataset(
+    root_dir=VALIDATION_IMAGES_DIR,
+    scale_factor=SCALE,
+    use_degradation=USE_DEGRADATION,
+    noise_sigma=NOISE_SIGMA,
+    jpeg_quality=JPEG_QUALITY,
+    gamma=GAMMA
+)
 
 # Dataloader
 train_loader = DataLoader(train_data, batch_size=TRAIN_BATCH_SIZE, shuffle=True)
