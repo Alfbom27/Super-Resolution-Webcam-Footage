@@ -1,10 +1,14 @@
-"""A from-scratch implementation of MobileNetV2 paper ( for educational purposes ).
+"""
+Implementation from: https://github.com/Shubhamai/pytorch-mobilenet
+
+A from-scratch implementation of MobileNetV2 paper ( for educational purposes ).
 
 Paper
     MobileNetV2: Inverted Residuals and Linear Bottlenecks - https://arxiv.org/abs/1801.04381
 
 author : shubham.aiengineer@gmail.com
 """
+
 
 
 import torch
