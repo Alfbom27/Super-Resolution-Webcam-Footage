@@ -6,6 +6,6 @@ Train models using:
 Test models using:  
 !python src/test.py --config src/config.yaml
 
-Trained models:
+Trained models and dataset:
 https://drive.google.com/drive/folders/1nKz4JGDx_DBjO190MtS66vw1pvZ3mWAq?usp=sharing
 
