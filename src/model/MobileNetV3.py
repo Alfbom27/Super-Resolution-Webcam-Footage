@@ -1,4 +1,7 @@
-"""A from-scratch implementation of MobileNetV3 paper ( for educational purposes ).
+"""
+Implementation from: https://github.com/Shubhamai/pytorch-mobilenet
+
+A from-scratch implementation of MobileNetV3 paper ( for educational purposes ).
 
 Paper
     Searching for MobileNetV3 - https://arxiv.org/abs/1905.02244v5

@@ -1,6 +1,7 @@
 # Implementation from https://github.com/Coloquinte/torchSR/blob/main/torchsr/models/edsr.py
 # Based on: Enhanced Deep Residual Networks for Single Image Super-Resolution
 # https://arxiv.org/abs/1707.02921
+# Modified using MobileNetv2 and MobileNetv3-style Inverted Residual Bottleneck blocks.
 
 import math
 import torch
