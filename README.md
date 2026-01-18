@@ -1,9 +1,9 @@
 # Super-resolution-Webcam-Footage
 
-Trained models using:  
+Train models using:  
 !python src/train.py --config src/config.yaml  
 
-Tested models using:  
+Test models using:  
 !python src/test.py --config src/config.yaml
 
 Trained models:
